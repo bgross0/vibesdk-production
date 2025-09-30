@@ -32,12 +32,8 @@ import { env } from 'cloudflare:workers'
 import { BaseSandboxService } from './BaseSandboxService';
 
 import {
-    buildDeploymentConfig,
     parseWranglerConfig,
 } from '../deployer/deploy';
-import { 
-    createAssetManifest 
-} from '../deployer/utils/index';
 import { CodeFixResult, FileFetcher, fixProjectIssues } from '../code-fixer';
 import { FileObject } from '../code-fixer/types';
 import { generateId } from '../../utils/idGenerator';
@@ -1769,41 +1765,7 @@ export class SandboxSdkClient extends BaseSandboxService {
             const workerContent = workerFile.content;
             this.logger.info('Worker script loaded', { sizeKB: (workerContent.length / 1024).toFixed(2) });
             
-            // Step 4: Check for assets and process them
-            const assetsPath = `${instanceId}/dist/client`;
-            let assetsManifest: Record<string, { hash: string; size: number }> | undefined;
-            let fileContents: Map<string, Buffer> | undefined;
-            
-            const assetDirResult = await sandbox.exec(`test -d ${assetsPath} && echo "exists" || echo "missing"`);
-            const hasAssets = assetDirResult.exitCode === 0 && assetDirResult.stdout.trim() === "exists";
-            
-            if (hasAssets) {
-                this.logger.info('Processing assets', { assetsPath });
-                const assetProcessResult = await this.processAssetsInSandbox(instanceId, assetsPath);
-                assetsManifest = assetProcessResult.assetsManifest;
-                fileContents = assetProcessResult.fileContents;
-            } else {
-                this.logger.info('No assets found, deploying worker only');
-            }
-            
-            // Step 5: Override config for dispatch deployment
-            const dispatchConfig = {
-                ...config,
-                name: config.name
-            };
-        
-            
-            // Step 6: Build deployment config using pure function
-            const deployConfig = buildDeploymentConfig(
-                dispatchConfig,
-                workerContent,
-                accountId,
-                apiToken,
-                assetsManifest,
-                config.compatibility_flags
-            );
-            
-            // Step 7: App is already running in sandbox - no dispatch deployment needed
+            // Step 4: App is already running in sandbox - no deployment needed
             // The sandbox Durable Object serves the app directly
             this.logger.info('App deployed and running in sandbox container', {
                 instanceId,
