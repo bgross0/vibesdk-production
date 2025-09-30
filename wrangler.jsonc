@@ -54,13 +54,6 @@
 	"images": {
 		"binding": "IMAGES"
 	},
-    "dispatch_namespaces": [
-        {
-            "binding": "DISPATCHER",
-            "namespace": "vibesdk-default-namespace",
-            "remote": true
-        }
-    ],
 	"containers": [
 		{
 			"class_name": "UserAppSandboxService",
@@ -144,7 +137,6 @@
 	"vars": {
         "TEMPLATES_REPOSITORY": "https://github.com/cloudflare/vibesdk-templates",
         "ALLOWED_EMAIL": "ben@axsys.dev",
-        "DISPATCH_NAMESPACE": "vibesdk-default-namespace",
         "CLOUDFLARE_AI_GATEWAY": "vibesdk-gateway",
         "CUSTOM_DOMAIN": "axsyslabs.com",
         "MAX_SANDBOX_INSTANCES": "10",

@@ -5,10 +5,10 @@
  *
  * This script handles the complete setup and deployment process for the
  * Cloudflare Orange Build platform, including:
- * - Workers for Platforms dispatch namespace creation
  * - Templates repository deployment to R2
  * - Container configuration updates
  * - Environment validation
+ * - AI Gateway setup
  *
  * Used by the "Deploy to Cloudflare" button for one-click deployment.
  */
@@ -1839,20 +1839,9 @@ class CloudflareDeploymentManager {
 
 			console.log('✅ Configuration files updated successfully!\n');
 
-			// Step 1.5: Check dispatch namespace availability early
-			console.log('\n📋 Step 1.5: Checking dispatch namespace availability...');
-			const dispatchNamespacesAvailable = await this.checkDispatchNamespaceAvailability();
-			
-			// Comment out dispatch_namespaces in wrangler.jsonc if not available
-			if (!dispatchNamespacesAvailable) {
-				this.commentOutDispatchNamespaces();
-			}
-			console.log('✅ Dispatch namespace availability check completed!\n');
-
 			// Step 2: Update container configuration if needed
 			console.log('\n📋 Step 2: Updating container configuration...');
 			this.updateContainerConfiguration();
-			this.updateDispatchNamespace(dispatchNamespacesAvailable);
 
 			// Step 3: Resolve var/secret conflicts before deployment
 			console.log('\n📋 Step 3: Resolving var/secret conflicts...');
@@ -1867,11 +1856,6 @@ class CloudflareDeploymentManager {
 				this.buildProject(),
 			];
 
-			// Only add dispatch namespace setup if available
-			if (dispatchNamespacesAvailable) {
-				operations.push(this.ensureDispatchNamespace());
-			}
-
 			// Add AI Gateway setup if gateway name is provided
 			if (this.env.CLOUDFLARE_AI_GATEWAY) {
 				operations.push(this.ensureAIGateway());
@@ -1881,11 +1865,6 @@ class CloudflareDeploymentManager {
 			console.log(
 				'📋 Step 4: Running all setup operations in parallel...',
 			);
-			if (dispatchNamespacesAvailable) {
-				console.log('   🔄 Workers for Platforms namespace setup');
-			} else {
-				console.log('   ⏭️  Skipping Workers for Platforms namespace setup (not available)');
-			}
 			console.log('   🔄 Templates repository deployment');
 			console.log('   🔄 Project build (clean + compile)');
 			if (this.env.CLOUDFLARE_AI_GATEWAY) {

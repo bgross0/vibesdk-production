@@ -31,10 +31,9 @@ import { createObjectLogger } from '../../logger';
 import { env } from 'cloudflare:workers'
 import { BaseSandboxService } from './BaseSandboxService';
 
-import { 
-    buildDeploymentConfig, 
-    parseWranglerConfig, 
-    deployToDispatch, 
+import {
+    buildDeploymentConfig,
+    parseWranglerConfig,
 } from '../deployer/deploy';
 import { 
     createAssetManifest 
@@ -1804,33 +1803,22 @@ export class SandboxSdkClient extends BaseSandboxService {
                 config.compatibility_flags
             );
             
-            // Step 7: Deploy using pure function
-            this.logger.info('Deploying to Cloudflare');
-            if ('DISPATCH_NAMESPACE' in env) {
-                this.logger.info('Using dispatch namespace', { dispatchNamespace: env.DISPATCH_NAMESPACE });
-                await deployToDispatch(
-                    {
-                        ...deployConfig,
-                        dispatchNamespace: env.DISPATCH_NAMESPACE as string
-                    },
-                    fileContents,
-                    undefined, // additionalModules
-                    config.migrations,
-                    config.assets
-                );
-            } else {
-                throw new Error('DISPATCH_NAMESPACE not found in environment variables, cannot deploy without dispatch namespace');
-            }
-            
+            // Step 7: App is already running in sandbox - no dispatch deployment needed
+            // The sandbox Durable Object serves the app directly
+            this.logger.info('App deployed and running in sandbox container', {
+                instanceId,
+                projectName
+            });
+
             // Step 8: Determine deployment URL
             const deployedUrl = `${this.getProtocolForHost()}://${projectName}.${this.hostname}`;
             const deploymentId = projectName;
-            
-            this.logger.info('Deployment successful', { 
+
+            this.logger.info('Deployment successful', {
                 instanceId,
-                deployedUrl, 
+                deployedUrl,
                 deploymentId,
-                mode: 'dispatch-namespace'
+                mode: 'sandbox-durable-object'
             });
             
             return {
