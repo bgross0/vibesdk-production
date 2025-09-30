@@ -1786,11 +1786,18 @@ class CloudflareDeploymentManager {
 				return;
 			}
 
-			// Comment out the dispatch_namespaces section
-			// Look for the pattern and replace it with commented version
+			// Comment out the dispatch_namespaces section dynamically
+			// Match and comment out each line while preserving indentation
 			const commentedContent = content.replace(
-				/(\s*)"dispatch_namespaces": \[[\s\S]*?\]/,
-				'$1// "dispatch_namespaces": [\n$1//     {\n$1//         "binding": "DISPATCHER",\n$1//         "namespace": "orange-build-default-namespace",\n$1//         "experimental_remote": true\n$1//     }\n$1// ]'
+				/^(\s*)"dispatch_namespaces":\s*\[([\s\S]*?)\n(\s*)\]/gm,
+				(match, indent) => {
+					const lines = match.split('\n');
+					return lines.map(line => {
+						if (!line.trim()) return line;
+						const lineIndent = line.match(/^(\s*)/)?.[1] || '';
+						return `${lineIndent}// ${line.trimStart()}`;
+					}).join('\n');
+				}
 			);
 
 			if (commentedContent !== content) {
