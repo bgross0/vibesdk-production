@@ -1801,60 +1801,6 @@ export class SandboxSdkClient extends BaseSandboxService {
         }
     }
 
-    /**
-     * Process assets in sandbox and create manifest for deployment
-     */
-    private async processAssetsInSandbox(_instanceId: string, assetsPath: string): Promise<{
-        assetsManifest: Record<string, { hash: string; size: number }>;
-        fileContents: Map<string, Buffer>;
-    }> {
-        const sandbox = this.getSandbox();
-        
-        // Get list of all files in assets directory
-        const findResult = await sandbox.exec(`find ${assetsPath} -type f`);
-        if (findResult.exitCode !== 0) {
-            throw new Error(`Failed to list assets: ${findResult.stderr}`);
-        }
-        
-        const filePaths = findResult.stdout.trim().split('\n').filter(path => path);
-        this.logger.info('Asset files found', { count: filePaths.length });
-        
-        const fileContents = new Map<string, Buffer>();
-        const filesAsArrayBuffer = new Map<string, ArrayBuffer>();
-        
-        // Read each file and calculate hashes
-        for (const fullPath of filePaths) {
-            const relativePath = fullPath.replace(`${assetsPath}/`, '/');
-            
-            try {
-                const fileResult = await sandbox.readFile(fullPath);
-                if (fileResult.success) {
-                    // Convert string content to Buffer (assuming binary safe encoding)
-                    const buffer = Buffer.from(fileResult.content, 'binary');
-                    fileContents.set(relativePath, buffer);
-                    
-                    // Convert to ArrayBuffer for hash calculation
-                    const arrayBuffer = new ArrayBuffer(buffer.length);
-                    const view = new Uint8Array(arrayBuffer);
-                    for (let i = 0; i < buffer.length; i++) {
-                        view[i] = buffer[i];
-                    }
-                    filesAsArrayBuffer.set(relativePath, arrayBuffer);
-                    
-                    this.logger.info('Asset file processed', { path: relativePath, sizeBytes: buffer.length });
-                }
-            } catch (error) {
-                this.logger.warn(`Failed to read asset file ${fullPath}:`, error);
-            }
-        }
-        
-        // Create asset manifest using pure function
-        const assetsManifest = await createAssetManifest(filesAsArrayBuffer);
-        const assetCount = Object.keys(assetsManifest).length;
-        this.logger.info('Asset manifest created', { assetCount });
-        
-        return { assetsManifest, fileContents };
-    }
 
     /**
      * Get protocol for host (utility method)
