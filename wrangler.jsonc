@@ -20,7 +20,10 @@
 	},
 	"observability": {
 		"enabled": true,
-        "head_sampling_rate": 1
+        "head_sampling_rate": 1,
+		"logs": {
+			"enabled": true
+		}
 	},
   "unsafe": {
     "bindings": [
@@ -143,7 +146,7 @@
         "ALLOWED_EMAIL": "ben@axsys.dev",
         "DISPATCH_NAMESPACE": "vibesdk-default-namespace",
         "CLOUDFLARE_AI_GATEWAY": "vibesdk-gateway",
-        "CUSTOM_DOMAIN": "https://axsyslabs.com",
+        "CUSTOM_DOMAIN": "axsyslabs.com",
         "MAX_SANDBOX_INSTANCES": "10",
         "SANDBOX_INSTANCE_TYPE": "standard"
     },
